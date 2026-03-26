@@ -1,17 +1,17 @@
 # 🚀 Server Monitor Service
 
-A structured and production-ready Node.js monitoring service for Ubuntu servers.
+A structured, production-ready Node.js monitoring microservice for Ubuntu servers.
 
-This service monitors:
+This service provides real-time monitoring for:
 
 * ✅ CPU usage
 * ✅ RAM usage
-* ✅ Disk usage ( `/` and `/data` )
+* ✅ Disk usage (`/` and `/data`)
 * ✅ Nginx status (UP / DOWN)
 * ✅ PM2 services (frontend, backend, chain, indexer, explorer, etc.)
-* ✅ Service uptime in weeks
+* ✅ Service uptime (in weeks)
 
-The API runs on **port 6250**.
+The API runs securely on **port 6250** and is protected using an **API Key**.
 
 ---
 
@@ -34,9 +34,13 @@ server-monitor/
 │   │   ├── pm2.service.js
 │   │   └── nginx.service.js
 │   │
+│   ├── middleware/
+│   │   └── apiKey.middleware.js
+│   │
 │   └── utils/
 │       └── format.util.js
 │
+├── .env
 ├── package.json
 └── README.md
 ```
@@ -73,6 +77,23 @@ Dependencies used:
 * express
 * systeminformation
 * pm2
+* dotenv
+
+---
+
+# 🔐 Environment Configuration
+
+Create a `.env` file in the root directory:
+
+```
+PORT=6250
+API_KEY=your-super-secret-key
+```
+
+⚠️ Important:
+
+* Never commit `.env` to Git.
+* Add `.env` to `.gitignore`.
 
 ---
 
@@ -90,11 +111,29 @@ node src/index.js
 pm2 start src/index.js --name server-monitor
 ```
 
-The API will start on:
+The API will run on:
 
 ```
 http://localhost:6250
 ```
+
+---
+
+# 🔐 Authentication (API Key Required)
+
+All endpoints are protected using an API key.
+
+You must send the API key in the request header:
+
+```
+x-api-key: your-super-secret-key
+```
+
+If:
+
+* ❌ No API key → `401 Unauthorized`
+* ❌ Wrong API key → `403 Forbidden`
+* ✅ Correct API key → `200 OK`
 
 ---
 
@@ -105,7 +144,8 @@ http://localhost:6250
 ### Example Request
 
 ```
-GET http://your-server-ip:6250/api/monitor
+curl -H "x-api-key: your-super-secret-key" \
+http://your-server-ip:6250/api/monitor
 ```
 
 ---
@@ -153,7 +193,7 @@ GET http://your-server-ip:6250/api/monitor
 
 # 🔎 What Is Monitored
 
-## 🖥 System
+## 🖥 System Metrics
 
 * CPU usage %
 * CPU core count
@@ -163,15 +203,16 @@ GET http://your-server-ip:6250/api/monitor
 
 ## 🌐 Nginx
 
-* Checks status using:
+Checks using:
 
-  ```
-  systemctl is-active nginx
-  ```
-* Returns:
+```
+systemctl is-active nginx
+```
 
-  * `UP`
-  * `DOWN`
+Returns:
+
+* `UP`
+* `DOWN`
 
 ## ⚙️ PM2 Services
 
@@ -183,52 +224,30 @@ GET http://your-server-ip:6250/api/monitor
 
 ---
 
-# 🔐 Security Recommendations (Important)
+# 🛡 Security Recommendations
 
-⚠️ Do NOT expose this endpoint publicly without protection.
+For production environments:
 
-Recommended options:
-
-* Add API key middleware
-* Restrict via firewall / AWS Security Group
-* Bind service to `127.0.0.1`
-* Use reverse proxy with authentication
-* Use private subnet (recommended for production)
-
-Example simple API key middleware:
-
-```js
-app.use((req, res, next) => {
-  if (req.headers["x-api-key"] !== "your-secret-key") {
-    return res.status(401).send("Unauthorized");
-  }
-  next();
-});
-```
+* Bind Node to `127.0.0.1`
+* Use Nginx as reverse proxy with HTTPS
+* Close port 6250 in firewall
+* Restrict access via AWS Security Group
+* Keep API key private
+* Rotate API key periodically
 
 ---
 
-# 🧪 Testing
-
-Test locally:
-
-```
-curl http://localhost:6250/api/monitor
-```
-
----
-
-# 🚀 Production Suggestions
+# 🚀 Optional Enhancements
 
 You can extend this service with:
 
 * `/health` endpoint for load balancers
+* Rate limiting
+* IP whitelisting
 * Telegram / Slack alerts
-* Auto-restart nginx if DOWN
+* Auto-restart services if DOWN
 * Docker support
-* Multi-server monitoring
-* Real-time WebSocket dashboard
-* Logging & rate limiting
+* Multi-server monitoring dashboard
 
 ---
 
@@ -241,6 +260,4 @@ MIT License
 # 👨‍💻 Author
 
 Server Monitor Service
-Lightweight, structured monitoring microservice for production servers.
-
----
+Lightweight structured monitoring microservice for production servers.
