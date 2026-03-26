@@ -1,77 +1,96 @@
 # 🚀 Server Monitor Service
 
-A lightweight Node.js monitoring service for Ubuntu servers that provides:
+A structured and production-ready Node.js monitoring service for Ubuntu servers.
 
-* ✅ CPU usage monitoring
-* ✅ RAM usage monitoring
-* ✅ Disk usage monitoring
-* ✅ Nginx status check (up / down)
-* ✅ PM2 process monitoring (frontend & backend)
-* ✅ Single JSON API endpoint for complete server health
+This service monitors:
 
----
+* ✅ CPU usage
+* ✅ RAM usage
+* ✅ Disk usage ( `/` and `/data` )
+* ✅ Nginx status (UP / DOWN)
+* ✅ PM2 services (frontend, backend, chain, indexer, explorer, etc.)
+* ✅ Service uptime in weeks
 
-# 📦 Features
-
-* Real-time system metrics
-* PM2 process health monitoring
-* Nginx service status detection
-* Clean structured JSON response
-* Easy to integrate with dashboards or alert systems
-* Production-ready architecture
+The API runs on **port 6250**.
 
 ---
 
-# 🏗 Project Structure
+# 📁 Project Structure
 
 ```
 server-monitor/
- ├── index.js
- ├── services/
- │     ├── system.js
- │     ├── nginx.js
- │     └── pm2.js
- └── package.json
+│
+├── src/
+│   ├── index.js
+│   │
+│   ├── routes/
+│   │   └── monitor.routes.js
+│   │
+│   ├── controllers/
+│   │   └── monitor.controller.js
+│   │
+│   ├── services/
+│   │   ├── system.service.js
+│   │   ├── pm2.service.js
+│   │   └── nginx.service.js
+│   │
+│   └── utils/
+│       └── format.util.js
+│
+├── package.json
+└── README.md
 ```
 
 ---
 
-# ⚙️ Installation
+# ⚙️ Requirements
+
+* Ubuntu Server
+* Node.js 18+
+* PM2 installed globally
+* Nginx installed (if monitoring enabled)
+* systemd enabled (for nginx status check)
+
+---
+
+# 📦 Installation
 
 ## 1️⃣ Clone the Repository
 
-```bash
-git clone <your-repo-url>
+```
+git clone <your-repository-url>
 cd server-monitor
 ```
 
 ## 2️⃣ Install Dependencies
 
-```bash
+```
 npm install
 ```
 
 Dependencies used:
 
 * express
-* pm2
 * systeminformation
+* pm2
 
 ---
 
-# ▶️ Run the Service
+# ▶️ Running the Service
 
-```bash
-node index.js
+## Run Normally
+
+```
+node src/index.js
 ```
 
-Or with PM2:
+## Run with PM2 (Recommended)
 
-```bash
-pm2 start index.js --name server-monitor
+```
+pm2 start src/index.js --name server-monitor
 ```
 
-Service will run on:
+The API will start on:
 
 ```
 http://localhost:6250
@@ -81,53 +100,50 @@ http://localhost:6250
 
 # 🌐 API Endpoint
 
-## GET `/monitor`
-
-Returns full server health status.
+## GET `/api/monitor`
 
 ### Example Request
 
 ```
-GET http://your-server:6250/monitor
+GET http://your-server-ip:6250/api/monitor
 ```
 
-### Example Response
+---
+
+# 📊 Example Response
 
 ```json
 {
   "timestamp": "2026-03-26T14:00:00.000Z",
   "system": {
-    "cpu": {
-      "usagePercent": "12.54",
-      "cores": 2
-    },
+    "cpuUsagePercent": "38.45",
+    "cpuCores": 4,
     "memory": {
-      "totalGB": "4.00",
-      "usedGB": "2.10",
-      "freeGB": "1.90"
+      "totalGB": "15.61",
+      "usedGB": "8.12",
+      "freeGB": "7.49"
     },
-    "disk": [
-      {
-        "filesystem": "/",
-        "sizeGB": "40.00",
-        "usedGB": "15.00",
-        "usagePercent": 37
+    "disk": {
+      "root": {
+        "totalTB": "3.932",
+        "usedTB": "2.806",
+        "usagePercent": 71
+      },
+      "data": {
+        "totalGB": "983",
+        "usedGB": "20.9",
+        "usagePercent": 2
       }
-    ]
+    }
   },
-  "nginx": "up",
-  "pm2": [
-    {
-      "name": "frontend",
-      "status": "online",
-      "cpu": 0,
-      "memoryMB": "45.21"
-    },
+  "nginx": "UP",
+  "services": [
     {
       "name": "backend",
-      "status": "online",
-      "cpu": 1.2,
-      "memoryMB": "80.12"
+      "status": "ONLINE",
+      "cpuPercent": 1.2,
+      "memoryMB": "82.14",
+      "uptimeWeeks": "6.2"
     }
   ]
 }
@@ -135,17 +151,49 @@ GET http://your-server:6250/monitor
 
 ---
 
-# 🔐 Security Recommendations
+# 🔎 What Is Monitored
 
-⚠️ Do NOT expose this API publicly without protection.
+## 🖥 System
+
+* CPU usage %
+* CPU core count
+* Total / Used / Free RAM
+* Disk usage for `/`
+* Disk usage for `/data`
+
+## 🌐 Nginx
+
+* Checks status using:
+
+  ```
+  systemctl is-active nginx
+  ```
+* Returns:
+
+  * `UP`
+  * `DOWN`
+
+## ⚙️ PM2 Services
+
+* Process name
+* Status (ONLINE / STOPPED)
+* CPU usage %
+* Memory usage (MB)
+* Uptime in weeks
+
+---
+
+# 🔐 Security Recommendations (Important)
+
+⚠️ Do NOT expose this endpoint publicly without protection.
 
 Recommended options:
 
-* Add API key authentication
-* Use Basic Auth
-* Restrict access via firewall or security group
-* Run inside private subnet
-* Bind to `localhost` and access via reverse proxy
+* Add API key middleware
+* Restrict via firewall / AWS Security Group
+* Bind service to `127.0.0.1`
+* Use reverse proxy with authentication
+* Use private subnet (recommended for production)
 
 Example simple API key middleware:
 
@@ -160,58 +208,27 @@ app.use((req, res, next) => {
 
 ---
 
-# 📊 What Is Monitored
-
-### System
-
-* CPU usage %
-* Total / Used / Free RAM
-* Disk usage
-* Core count
-
-### Nginx
-
-* Uses `systemctl is-active nginx`
-* Returns: `up` or `down`
-
-### PM2
-
-* Process name
-* Status (online / stopped)
-* CPU usage
-* Memory usage (MB)
-
----
-
-# 🚀 Production Recommendations
-
-For production environments, consider:
-
-* Adding `/health` endpoint for load balancers
-* Integrating alerting (Telegram / Email)
-* Auto-restart Nginx if down
-* Logging errors to file
-* Dockerizing the monitor
-* Adding rate limiting
-
----
-
 # 🧪 Testing
 
-You can test locally using:
+Test locally:
 
-```bash
-curl http://localhost:6250/monitor
+```
+curl http://localhost:6250/api/monitor
 ```
 
 ---
 
-# 🛠 Requirements
+# 🚀 Production Suggestions
 
-* Ubuntu server
-* Node.js 18+
-* PM2 installed globally
-* Nginx installed (if monitoring required)
+You can extend this service with:
+
+* `/health` endpoint for load balancers
+* Telegram / Slack alerts
+* Auto-restart nginx if DOWN
+* Docker support
+* Multi-server monitoring
+* Real-time WebSocket dashboard
+* Logging & rate limiting
 
 ---
 
@@ -224,6 +241,6 @@ MIT License
 # 👨‍💻 Author
 
 Server Monitor Service
-Lightweight production-ready monitoring tool for Node.js servers.
+Lightweight, structured monitoring microservice for production servers.
 
 ---
