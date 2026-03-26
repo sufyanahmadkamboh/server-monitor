@@ -74,7 +74,7 @@ pm2 start index.js --name server-monitor
 Service will run on:
 
 ```
-http://localhost:4000
+http://localhost:6250
 ```
 
 ---
@@ -88,7 +88,7 @@ Returns full server health status.
 ### Example Request
 
 ```
-GET http://your-server:4000/monitor
+GET http://your-server:6250/monitor
 ```
 
 ### Example Response
@@ -201,7 +201,7 @@ For production environments, consider:
 You can test locally using:
 
 ```bash
-curl http://localhost:4000/monitor
+curl http://localhost:6250/monitor
 ```
 
 ---

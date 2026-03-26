@@ -22,6 +22,6 @@ app.get("/monitor", async (req, res) => {
   }
 });
 
-app.listen(4000, () => {
-  console.log("Monitor service running on port 4000");
+app.listen(6250, () => {
+  console.log("Monitor service running on port 6250");
 });
