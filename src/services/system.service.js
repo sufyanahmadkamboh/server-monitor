@@ -27,13 +27,13 @@ exports.getSystemStats = async () => {
           }
         : null,
 
-      data: dataDisk
-        ? {
-            totalGB: (dataDisk.size / 1e9).toFixed(0),
-            usedGB: (dataDisk.used / 1e9).toFixed(1),
-            usagePercent: dataDisk.use
-          }
-        : null
+      // data: dataDisk
+      //   ? {
+      //       totalGB: (dataDisk.size / 1e9).toFixed(0),
+      //       usedGB: (dataDisk.used / 1e9).toFixed(1),
+      //       usagePercent: dataDisk.use
+      //     }
+      //   : null
     }
   };
 };
