@@ -21,8 +21,8 @@ exports.getSystemStats = async () => {
     disk: {
       root: rootDisk
         ? {
-            totalTB: (rootDisk.size / 1e12).toFixed(3),
-            usedTB: (rootDisk.used / 1e12).toFixed(3),
+            totalTB: (rootDisk.size / 1e9).toFixed(2),
+            usedTB: (rootDisk.used / 1e9).toFixed(2),
             usagePercent: rootDisk.use
           }
         : null,
